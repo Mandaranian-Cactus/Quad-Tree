@@ -19,11 +19,10 @@ pygame.init()
 clock = pygame.time.Clock()
 quad_tree = Quad_Tree_Project.Quad_tree(0,0,screen.w, screen.h,0)
 rects = []
-for i in range(500):
+for i in range(700):
     dx, dy = random.randrange(-3,3), random.randrange(-3,3)
     x, y = random.randrange(1, screen.w - 10), random.randrange(1, screen.h - 10)
     rects.append(Quad_Tree_Project.Rect(x, y, 10, 10, dx, dy))
-
 
 while True:
     screen.fill()
@@ -45,7 +44,7 @@ while True:
     for rect in rects:
         rect.draw(screen.screen)
 
-    # quad_tree.draw_trees(screen.screen)
+    quad_tree.draw_trees(screen.screen)
 
     # Check inputs
     for event in pygame.event.get():
