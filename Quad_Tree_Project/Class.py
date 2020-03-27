@@ -43,13 +43,17 @@ class Rect:
 
         if self.x < 0:
             self.dx *= -1
+            self.x = 0
         elif self.x + self.w > screen_w:
             self.dx *= -1
+            self.x = screen_w - self.w
 
         if self.y < 0:
+            self.y = 0
             self.dy *= -1
         elif self.y + self.h > screen_h:
             self.dy *= -1
+            self.y = screen_h - self.h
 
         self.collision_check(collisions)
 
@@ -62,29 +66,29 @@ class Rect:
         # This way, an object inside a quadrant touching a bordering object would be accounted for
         # The bordering object would not see the quadrant object while the quadrant object would see the quadrant object
 
-            other_hits = []
-            low1_x, high1_x = self.x, self.x + self.w
-            low1_y, high1_y = self.y, self.y + self.h
-            for collision in collisions:
-                y_flag = True
-                x_flag = True
+        other_hits = []
+        low1_x, high1_x = self.x, self.x + self.w
+        low1_y, high1_y = self.y, self.y + self.h
+        for collision in collisions:
+            y_flag = True  # Collision in x_axis
+            x_flag = True  # Collision in y_axis
 
-                low2_x, high2_x = collision.x, collision.x + collision.w
-                if two_range_overlap(low1_x, high1_x, low2_x, high2_x):
-                    x_flag = False
+            low2_x, high2_x = collision.x, collision.x + collision.w
+            if two_range_overlap(low1_x, high1_x, low2_x, high2_x):
+                x_flag = False
 
-                low2_y, high2_y = collision.y, collision.y + collision.h
-                if two_range_overlap(low1_y, high1_y, low2_y, high2_y):
-                    y_flag = False
+            low2_y, high2_y = collision.y, collision.y + collision.h
+            if two_range_overlap(low1_y, high1_y, low2_y, high2_y):
+                y_flag = False
 
-                if not x_flag and not y_flag:
-                    other_hits.append(collision)
+            if not x_flag and not y_flag:  # Collision in both axes means overall collision/overlap
+                other_hits.append(collision)
 
-            if len(other_hits) > 0:  # If len(other_hits) > 0, it means there was a collision with at leas t 1 object
-                self.color = (255, 0, 0)
+        if len(other_hits) > 0:  # If len(other_hits) > 0, it means there was a collision with at leas t 1 object
+            self.color = (255, 0, 0)
 
-            for hit in other_hits:
-                hit.color = (255, 0, 0)
+        for hit in other_hits:
+            hit.color = (255, 0, 0)
 
 
 class Quad_tree:
@@ -101,12 +105,12 @@ class Quad_tree:
         # These "irregular items" would later be retrieved by the "retrieve" function
 
     def clear(self):
-        # Recursive Function
-        self.objects = []  # Clear the parent node of all of its objects (Rectangles in this case)
-        for i in range(len(self.nodes)):
-            if self.nodes[i] != None:  # Iffy
-                self.nodes[i].clear()
-                self.nodes[i] = None
+        # Recursive Function (Should be using a dfs-like approach)
+        if self.nodes[0] != None:  # Base-case Condition (If the child nodes are not "None", that means we are not on a leaf node and that we can traverse deeper)
+            self.objects = []  # Clear the parent node of all of its objects (Rectangles in this case)
+            for i in range(len(self.nodes)):
+                self.nodes[i].clear()  # Recur deeper (this line needs to be placed before the next one since we want ot access another quadtree object instead of a None Object)
+                self.nodes[i] = None  # Set the child node to be none once the "bottom-up" occurs
 
     def split(self):
         # Child quadrants are to be numbers as if they were quadrants on a cartesian plane
@@ -152,11 +156,9 @@ class Quad_tree:
         # The first part's duty is to recur down to either find the deepest parent quadrant
         # The result will either be a case where we can't recur any deeper or the index of the object is -1
         # The index = -1 case is special because it means that we can go deeper into the tree however no deeper quadrants would include the object
-        index_confirm = ""
         if self.nodes[0] != None:  # Checks to see if we are a current leaf nodes
             # We are not on a current leaf node
             index = self.get_index(rect)
-            index_confirm = index
 
             if index != -1:
                 # The rectangle is found to be capable of fitting in a quadrant completely
@@ -196,7 +198,9 @@ class Quad_tree:
         # The getting of objects that were not fully within quadrants is super cool and is done as the dfs goes back up from bottom
         return return_objects
 
-    def draw_trees(self, screen):
+    def draw_trees(self, screen):  # Used to draw quadtree
+
+        # We basically continue recurring deeper as long as we aren't at a leaf leaf
 
         if self.nodes[0] != None:
 
